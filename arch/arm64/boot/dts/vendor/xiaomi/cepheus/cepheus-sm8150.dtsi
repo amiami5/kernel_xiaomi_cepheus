@@ -14,6 +14,18 @@ And public attribution of xiaomi platforms(like F1 and so and)
 #include "display/dsi-panel-samsung-fhd-ea8076-f1p2-cmd.dtsi"
 #include "display/dsi-panel-samsung-fhd-ea8076-f1p2-2-cmd.dtsi"
 
+/* Console / pmsg / oops log kept across reboots (pstore, ramoops) */
+&reserved_memory {
+	ramoops@a1600000 {
+		compatible = "ramoops";
+		reg = <0x0 0xa1600000 0x0 0x800000>;
+		no-map;
+		record-size = <0x80000>;
+		console-size = <0x400000>;
+		pmsg-size = <0x100000>;
+	};
+};
+
 &vendor {
 	mtp_batterydata: qcom,battery-data {
 		qcom,batt-id-range-pct = <15>;
