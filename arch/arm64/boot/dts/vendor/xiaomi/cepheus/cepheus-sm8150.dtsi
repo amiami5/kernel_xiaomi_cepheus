@@ -14,7 +14,12 @@ And public attribution of xiaomi platforms(like F1 and so and)
 #include "display/dsi-panel-samsung-fhd-ea8076-f1p2-cmd.dtsi"
 #include "display/dsi-panel-samsung-fhd-ea8076-f1p2-2-cmd.dtsi"
 
-/* Console / pmsg / oops log kept across reboots (pstore, ramoops) */
+/*
+ * Console / pmsg log kept across warm reboots (pstore, ramoops).
+ * Same address and zone sizes as the 4.14 kernel (and recoveries built on
+ * it), so a 4.14 recovery can read the console log of a failed 4.19 boot.
+ * console + pmsg fill the region, which leaves no room for dmesg records.
+ */
 &reserved_memory {
 	ramoops@a1600000 {
 		compatible = "ramoops";
@@ -22,7 +27,7 @@ And public attribution of xiaomi platforms(like F1 and so and)
 		no-map;
 		record-size = <0x80000>;
 		console-size = <0x400000>;
-		pmsg-size = <0x100000>;
+		pmsg-size = <0x400000>;
 	};
 };
 
