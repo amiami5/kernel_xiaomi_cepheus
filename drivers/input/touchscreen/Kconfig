@@ -1302,6 +1302,8 @@ config TOUCHSCREEN_ROHM_BU21023
 
 source "drivers/input/touchscreen/st/Kconfig"
 
+source "drivers/input/touchscreen/fts_521/Kconfig"
+
 source "drivers/input/touchscreen/synaptics_dsx/Kconfig"
 
 source "drivers/input/touchscreen/synaptics_tcm/Kconfig"
