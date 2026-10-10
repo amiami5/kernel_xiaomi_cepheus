@@ -7100,8 +7100,8 @@ static int msm_snd_card_tavil_late_probe(struct snd_soc_card *card)
 	void *mbhc_calibration;
 #ifdef CONFIG_SND_SOC_CS35L41_FOR_CEPH
 	struct snd_soc_dai_link *dai_link;
-	struct snd_soc_codec *cs35l41_codec;
-	struct snd_soc_dapm_context * cs35l41_dapm;
+	struct snd_soc_component *cs35l41_component;
+	struct snd_soc_dapm_context *cs35l41_dapm;
 #endif
 
 	rtd = snd_soc_get_pcm_runtime(card, be_dl_name);
@@ -7138,8 +7138,8 @@ static int msm_snd_card_tavil_late_probe(struct snd_soc_card *card)
 	if (dai_link && dai_link->codec_name) {
 		if (!strcmp(dai_link->codec_name, CS35L41_CODEC_NAME)) {
 			dev_info(card->dev, "%s: found codec[%s]\n", __func__, CS35L41_CODEC_NAME);
-			cs35l41_codec = rtd->codec;
-			cs35l41_dapm = snd_soc_codec_get_dapm(cs35l41_codec);
+			cs35l41_component = rtd->codec_dai->component;
+			cs35l41_dapm = snd_soc_component_get_dapm(cs35l41_component);
 			snd_soc_dapm_ignore_suspend(cs35l41_dapm, "AMP Playback");
 			snd_soc_dapm_ignore_suspend(cs35l41_dapm, "AMP Capture");
 			snd_soc_dapm_ignore_suspend(cs35l41_dapm, "DSP1");
