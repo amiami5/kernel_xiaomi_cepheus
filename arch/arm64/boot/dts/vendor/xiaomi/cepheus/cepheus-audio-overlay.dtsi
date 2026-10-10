@@ -47,8 +47,8 @@
 	pinctrl-1 = <&quat_mi2s_sleep &quat_mi2s_sd0_sleep &quat_mi2s_sd1_sleep>;
 	pinctrl-2 = <&quat_tdm_active &quat_tdm_dout_active>;
 	pinctrl-3 = <&quat_tdm_sleep &quat_tdm_dout_sleep>;
-	pinctrl-4 = <&wcd_usbc_analog_en2_active>;
-	pinctrl-5 = <&wcd_usbc_analog_en2_idle>;
+	pinctrl-4 = <&wcd_usbc_analog_en2n_active>;
+	pinctrl-5 = <&wcd_usbc_analog_en2n_idle>;
 };
 
 &soc {
