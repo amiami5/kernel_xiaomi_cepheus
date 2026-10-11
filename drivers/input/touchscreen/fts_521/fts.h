@@ -59,7 +59,13 @@
 #define PRE_SAVED_METHOD
 
 /*#define FW_H_FILE*/
-#define FW_UPDATE_ON_PROBE
+/*
+ * The driver registers at late_initcall, before ueventd runs. A firmware
+ * request from probe then falls back to the sysfs loader and blocks boot
+ * until it times out (60 s, twice with the retry). Update from the delayed
+ * work instead, once userspace can answer the request.
+ */
+/*#define FW_UPDATE_ON_PROBE*/
 #ifdef FW_H_FILE
 #define FW_SIZE_NAME myArray_size
 #define FW_ARRAY_NAME myArray
@@ -75,7 +81,7 @@
 /*#define USE_ONE_FILE_NODE*/
 
 #ifndef FW_UPDATE_ON_PROBE
-#define EXP_FN_WORK_DELAY_MS				1000
+#define EXP_FN_WORK_DELAY_MS				10000
 #endif
 
 /**** END ****/
