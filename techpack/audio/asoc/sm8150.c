@@ -6064,7 +6064,16 @@ static struct snd_soc_dai_link msm_common_misc_fe_dai_links[] = {
 	},
 #if !(defined(CONFIG_MACH_XIAOMI_VAYU) || defined(CONFIG_MACH_XIAOMI_NABU))
 	{
+#ifdef CONFIG_MACH_XIAOMI_SM8150
+		/*
+		 * Same link as in the CONFIG_MACH_XIAOMI_SM8150 block above. 4.19
+		 * refuses duplicate link names (the card fails with -EEXIST), so
+		 * rename it but keep the entry to preserve the PCM numbering.
+		 */
+		.name = "Quaternary MI2S_RX Hostless Playback 2",
+#else
 		.name = "Quaternary MI2S_RX Hostless Playback",
+#endif
 		.stream_name = "Quaternary MI2S_RX Hostless Playback",
 		.cpu_dai_name = "QUAT_MI2S_RX_HOSTLESS",
 		.platform_name = "msm-pcm-hostless",
@@ -6079,7 +6088,11 @@ static struct snd_soc_dai_link msm_common_misc_fe_dai_links[] = {
 		.codec_name = "snd-soc-dummy",
 	},
 	{
+#ifdef CONFIG_MACH_XIAOMI_SM8150
+		.name = "Quaternary MI2S_TX Hostless Capture 2",
+#else
 		.name = "Quaternary MI2S_TX Hostless Capture",
+#endif
 		.stream_name = "Quaternary MI2S_TX Hostless Capture",
 		.cpu_dai_name = "QUAT_MI2S_TX_HOSTLESS",
 		.platform_name = "msm-pcm-hostless",
