@@ -35,7 +35,11 @@
 	printk(KERN_ERR "PrintAssert:%s (%s:%d) error code:%d\n",              \
 	       __FUNCTION__, __FILE__, __LINE__, e)
 
-#if defined(CONFIG_TRACING) && defined(DEBUG)
+/*
+ * DEBUG は dbgprint.h と Kbuild で常に定義されるため、trace_printk は
+ * TFA98XX_TRACE を明示したときだけ使う。
+ */
+#if defined(CONFIG_TRACING) && defined(TFA98XX_TRACE)
 #define tfa98xx_trace_printk(...) trace_printk(__VA_ARGS__)
 #else
 #define tfa98xx_trace_printk(...)
