@@ -407,8 +407,16 @@ static struct usb_request *mtp_request_new(struct usb_ep *ep, int buffer_size)
 	if (!req)
 		return NULL;
 
-	/* now allocate buffers for the requests */
-	req->buf = kmalloc(buffer_size, GFP_KERNEL);
+	/*
+	 * now allocate buffers for the requests. Large buffers fall back to
+	 * MTP_BULK_BUFFER_SIZE on failure, so don't retry hard or warn about
+	 * a high-order allocation failing.
+	 */
+	if (buffer_size > MTP_BULK_BUFFER_SIZE)
+		req->buf = kmalloc(buffer_size,
+				   GFP_KERNEL | __GFP_NORETRY | __GFP_NOWARN);
+	else
+		req->buf = kmalloc(buffer_size, GFP_KERNEL);
 	if (!req->buf) {
 		usb_ep_free_request(ep, req);
 		return NULL;
