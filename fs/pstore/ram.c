@@ -36,6 +36,8 @@
 #include <linux/of.h>
 #include <linux/of_address.h>
 #include <linux/memblock.h>
+#include <linux/of_fdt.h>
+#include <linux/libfdt.h>
 
 #define RAMOOPS_KERNMSG_HDR "===="
 #define MIN_MEM_SIZE 4096UL
@@ -986,6 +988,16 @@ static int __init ramoops_memreserve(char *p)
 	if (!p)
 		return 1;
 
+	/*
+	 * The bootloader passes ramoops_memreserve= unconditionally. A
+	 * second region at a fixed address would be probed on top of the
+	 * one described in DT and reinitialise the live pstore context.
+	 */
+	if (initial_boot_params &&
+	    fdt_node_offset_by_compatible(initial_boot_params, -1,
+					  "ramoops") >= 0)
+		return 0;
+
 	size = memparse(p, &p) & PAGE_MASK;
 	ramoops_data.mem_size = size;
 	ramoops_data.mem_address = 0xB0000000;
@@ -1006,6 +1018,9 @@ early_param("ramoops_memreserve", ramoops_memreserve);
 
 static int __init msm_register_ramoops_device(void)
 {
+	if (!ramoops_data.mem_size)
+		return 0;
+
 	pr_info("msm_register_ramoops_device\n");
 	if (platform_device_register(&ramoops_dev))
 		pr_info("Unable to register ramoops platform device\n");
