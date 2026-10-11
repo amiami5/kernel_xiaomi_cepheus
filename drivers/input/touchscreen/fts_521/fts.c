@@ -2614,6 +2614,33 @@ static ssize_t fts_grip_area_store(struct device *dev,
 	return count;
 }
 #ifdef CONFIG_FTS_FOD_AREA_REPORT
+/*
+ * Publish the FOD press state through tp_dev/fod_state as "x,y,state" and
+ * wake up pollers (the UDFPS sensor HAL). Does nothing if the state did not
+ * change.
+ */
+static void fts_fod_state_notify(struct fts_ts_info *info, int x, int y,
+				 int state)
+{
+	if (info->fod_state == state)
+		return;
+
+	info->fod_state_x = x;
+	info->fod_state_y = y;
+	info->fod_state = state;
+	if (info->fts_touch_dev)
+		sysfs_notify(&info->fts_touch_dev->kobj, NULL, "fod_state");
+}
+
+static ssize_t fts_fod_state_show(struct device *dev,
+				  struct device_attribute *attr, char *buf)
+{
+	struct fts_ts_info *info = dev_get_drvdata(dev);
+
+	return snprintf(buf, TSP_BUF_SIZE, "%d,%d,%d\n", info->fod_state_x,
+			info->fod_state_y, info->fod_state);
+}
+
 static ssize_t fts_fod_status_show(struct device *dev,
 				    struct device_attribute *attr, char *buf)
 {
@@ -3026,6 +3053,8 @@ static DEVICE_ATTR(touch_suspend_notify, (S_IRUGO | S_IRGRP),
 static DEVICE_ATTR(fod_status, (S_IRUGO | S_IWUSR | S_IWGRP),
 		   fts_fod_status_show, fts_fod_status_store);
 
+static DEVICE_ATTR(fod_state, S_IRUGO, fts_fod_state_show, NULL);
+
 static DEVICE_ATTR(fod_test, (S_IRUGO | S_IWUSR | S_IWGRP), NULL, fts_fod_test_store);
 #endif
 
@@ -3199,6 +3228,8 @@ static void fts_enter_pointer_event_handler(struct fts_ts_info *info,
 			input_report_key(info->input_dev, KEY_INFO, 0);
 			info->fod_coordinate_update = false;
 			info->fod_overlap = 0;
+			fts_fod_state_notify(info, info->fod_state_x,
+					     info->fod_state_y, 0);
 			logError(1, "%s  %s :  FOD Release :%d\n", tag, __func__,
 					touchId);
 			__clear_bit(touchId, &info->sleep_finger);
@@ -3252,6 +3283,8 @@ static void fts_leave_pointer_event_handler(struct fts_ts_info *info,
 
 		__clear_bit(touchId, &info->fod_id);
 		fod_up = true;
+		fts_fod_state_notify(info, info->fod_state_x,
+				     info->fod_state_y, 0);
 
 	} else {
 #endif
@@ -3315,6 +3348,8 @@ static void fts_leave_pointer_event_handler(struct fts_ts_info *info,
 #ifdef CONFIG_FTS_FOD_AREA_REPORT
 		info->fod_pressed = false;
 		info->fod_overlap = 0;
+		fts_fod_state_notify(info, info->fod_state_x,
+				     info->fod_state_y, 0);
 		input_report_key(info->input_dev, BTN_INFO, 0);
 		input_report_key(info->input_dev, KEY_INFO, 0);
 		finger_report_flag = false;
@@ -3673,6 +3708,11 @@ static void fts_gesture_event_handler(struct fts_ts_info *info,
 					input_report_key(info->input_dev, BTN_INFO, 1);
 					input_report_key(info->input_dev, KEY_INFO, 1);
 					input_sync(info->input_dev);
+					if (info->sensor_sleep)
+						fts_fod_state_notify(info, x, y, 1);
+					else
+						fts_fod_state_notify(info, info->fod_x,
+								     info->fod_y, 1);
 					if (info->fod_id) {
 						fod_id = ffs(info->fod_id) - 1;
 						if (info->fod_id & ~(1 << fod_id))
@@ -3712,6 +3752,8 @@ static void fts_gesture_event_handler(struct fts_ts_info *info,
 			info->sleep_finger = 0;
 			info->fod_overlap = 0;
 			info->fod_pressed = false;
+			fts_fod_state_notify(info, info->fod_state_x,
+					     info->fod_state_y, 0);
 			goto gesture_done;
 		}
 #endif
@@ -4837,6 +4879,9 @@ static void fts_suspend_work(struct work_struct *work)
 	release_all_touches(info);
 
 	info->sensor_sleep = true;
+#ifdef CONFIG_FTS_FOD_AREA_REPORT
+	info->fod_state = 0;
+#endif
 
 	if (info->gesture_enabled || info->fod_status)
 		fts_enableInterrupt();
@@ -6317,6 +6362,12 @@ static int fts_probe(struct spi_device *client)
 			      &dev_attr_fod_status.attr);
 	if (error) {
 		logError(1, "%s ERROR: Failed to create fod_status sysfs group!\n", tag);
+	}
+	error =
+	    sysfs_create_file(&info->fts_touch_dev->kobj,
+			      &dev_attr_fod_state.attr);
+	if (error) {
+		logError(1, "%s ERROR: Failed to create fod_state sysfs group!\n", tag);
 	}
 	error =
 	    sysfs_create_file(&info->fts_touch_dev->kobj,
